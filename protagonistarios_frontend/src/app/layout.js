@@ -1,5 +1,6 @@
 import './globals.css';
 import Header from '../components/common/Header';
+import { AuthProvider } from '../context/AuthContext';
 
 export const metadata = {
   title: 'Protagonistarios - Personagens de Anime',
@@ -10,8 +11,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <Header />
-        <main className="container">{children}</main>
+        <AuthProvider>
+          <Header />
+          <main className="container">{children}</main>
+        </AuthProvider>
       </body>
     </html>
   );

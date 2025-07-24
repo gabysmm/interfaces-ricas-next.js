@@ -1,6 +1,11 @@
+'use client';
+
+import { useAuth } from '../../context/AuthContext';
 import Link from 'next/link';
 
 export default function Header() {
+const { user, logout } = useAuth();
+
   return (
     <header style={headerStyle}>
       <nav style={navStyle}>
@@ -12,6 +17,19 @@ export default function Header() {
             Adicionar Novo Personagem
           </Link>
         </div> */}
+        <div style={navLinksStyle}>
+          {user ? (
+            <>
+              <button onClick={logout} style={logoutButtonStyle}>
+                Sair
+              </button>
+            </>
+          ) : (
+            <Link href="/login" style={navLinkStyle}>
+              Login
+            </Link>
+          )}
+        </div>
       </nav>
     </header>
   );
@@ -48,5 +66,15 @@ const navLinksStyle = {
 const navLinkStyle = {
   color: 'white',
   textDecoration: 'none',
+  fontSize: '1.1em',
+};
+
+const logoutButtonStyle = {
+  backgroundColor: '#e74c3c',
+  color: 'white',
+  border: 'none',
+  padding: '10px 15px',
+  borderRadius: '5px',
+  cursor: 'pointer',
   fontSize: '1.1em',
 };
