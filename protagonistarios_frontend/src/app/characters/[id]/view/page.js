@@ -2,26 +2,33 @@
 
 import { useEffect, useState } from 'react';
 import { getCharacter } from '../../../../lib/api';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { useAuth } from '../../../../context/AuthContext';
 
 export default function ViewCharacterPage() {
   const { id } = useParams();
   const [character, setCharacter] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user, accessToken, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    if (id) {
-      fetchCharacter();
+    if (!authLoading) {
+      if (!user || !accessToken) {
+        router.push('/login');
+      } else if (id) {
+        fetchCharacter();
+      }
     }
-  }, [id]);
+  }, [id, user, accessToken, authLoading, router]);
 
   const fetchCharacter = async () => {
     try {
       setLoading(true);
-      const data = await getCharacter(id);
+      const data = await getCharacter(id, accessToken);
       setCharacter(data);
     } catch (err) {
       setError('Falha ao carregar personagem: ' + err.message);
@@ -31,8 +38,9 @@ export default function ViewCharacterPage() {
     }
   };
 
-  if (loading) return <p>Carregando detalhes do personagem...</p>;
+  if (authLoading || loading) return <p>Carregando detalhes do personagem...</p>;
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
+  if (!user) return null;
   if (!character) return <p>Personagem não encontrado.</p>;
 
   return (
@@ -44,7 +52,6 @@ export default function ViewCharacterPage() {
       </Link>
       <h1>{character.name}</h1>
       {character.image_url && (
-        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={character.image_url}
           alt={character.name}
@@ -56,7 +63,7 @@ export default function ViewCharacterPage() {
       </p>
       <p>
         <strong>Status:</strong> {character.status || 'vivo'}
-      </p>  
+      </p>
       {character.description && (
         <p>
           <strong>Descrição:</strong> {character.description}

@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import CharacterForm from '../../../../components/CharacterForm';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { useAuth } from '../../../../context/AuthContext';
 
 export default function EditCharacterPage() {
   const { id } = useParams();
@@ -13,17 +14,22 @@ export default function EditCharacterPage() {
   const [character, setCharacter] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user, accessToken, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    if (id) {
-      fetchCharacter();
+    if (!authLoading) {
+      if (!user || !accessToken) {
+        router.push('/login');
+      } else if (id) {
+        fetchCharacter();
+      }
     }
-  }, [id]);
+  }, [id, user, accessToken, authLoading, router]);
 
   const fetchCharacter = async () => {
     try {
       setLoading(true);
-      const data = await getCharacter(id);
+      const data = await getCharacter(id, accessToken);
       setCharacter(data);
     } catch (err) {
       setError('Falha ao carregar personagem para edição: ' + err.message);
@@ -34,8 +40,13 @@ export default function EditCharacterPage() {
   };
 
   const handleSubmit = async (data) => {
+    if (!accessToken) {
+      alert('Você não está autenticado. Por favor, faça login.');
+      router.push('/login');
+      return;
+    }
     try {
-      await updateCharacter(id, data);
+      await updateCharacter(id, data, accessToken);
       alert('Personagem atualizado com sucesso!');
       router.push('/');
     } catch (error) {
@@ -44,8 +55,9 @@ export default function EditCharacterPage() {
     }
   };
 
-  if (loading) return <p>Carregando personagem para edição...</p>;
+  if (authLoading || loading) return <p>Carregando personagem para edição...</p>;
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
+  if (!user) return null;
   if (!character) return <p>Personagem não encontrado.</p>;
 
   return (
